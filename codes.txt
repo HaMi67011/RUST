@@ -1,0 +1,482 @@
+GENERIC
+
+use std::fmt::Debug; // Import Debug trait
+fn generic_print<T:Debug> (value:T) -> T{
+    println!("{:?}",value);
+    value
+}
+
+let num=println!("generic function {}",generic_print(1));
+let string = println!("generic function {} ",generic_print('1'));
+
+///
+
+struct pair<t>{
+    x: t,
+    y:t,
+}
+
+let x = pair{x:10, y:2};
+println!("pair has value of {},{}",x.x,x.y);
+    
+///
+
+enum Option<t> {
+    Some(t),
+    None,
+    
+}
+
+let enum_val = Option::Some(3);
+let enum_val = Option::Some(3.0);
+
+///
+
+struct pair<t>{
+    x: t,
+    y:t,
+}
+
+impl<t> pair<t> {
+    fn new(x:t,y:t)->pair<t>{
+        pair{x:x,y:y}
+        }
+}
+
+let pair_val = pair::new(1, 1);
+
+///
+
+TRAIT
+
+trait Summary {
+    fn summarize(&self) -> String;
+}
+
+struct NewsArt<t>{
+    Name:String,
+    content:t ,   
+}
+
+impl <t:Summary> Summary for NewsArt<t>{
+ fn summarize(&self) -> String {
+        format!("{} - {}", self.Name, self.content.summarize())
+    }
+}
+
+struct Tweet{
+    Name:String,
+    content:String,    
+}
+
+impl Summary for Tweet{
+    fn summarize(&self) -> String {
+        format!("{} - {}", self.Name, self.content)
+    }
+}
+
+let tweet = Tweet {
+        Name: String::from("user123"),
+        content: String::from("Hello, Rust!"),
+    };
+
+let news_article = NewsArt {
+	Name: String::from("Rust News"),
+	content: tweet,
+};
+
+println!("{}", news_article.summarize());
+
+///
+
+trait Shape {
+    fn area(&self) -> f64;
+    fn perimeter(&self) -> f64;
+}
+
+struct Rectangle {
+    width: f64,
+    height: f64,
+}
+
+impl Shape for Rectangle {
+    fn area(&self) -> f64 {
+        self.width * self.height
+    }
+
+    fn perimeter(&self) -> f64 {
+        2.0 * (self.width + self.height)
+    }
+}
+
+struct Circles {
+    radius: f64,
+}
+
+impl Shape for Circles {
+    fn area(&self) -> f64 {
+        std::f64::consts::PI * self.radius * self.radius
+    }
+
+    fn perimeter(&self) -> f64 {
+        2.0 * std::f64::consts::PI * self.radius
+    }
+}
+
+fn print_shape_info(shape: &dyn Shape) {
+    println!("Area: {}", shape.area());
+    println!("Perimeter: {}", shape.perimeter());
+}
+
+let rectangle = Rectangle { width: 5.0, height: 3.0 };
+let circle = Circles { radius: 2.5 };
+
+println!("Rectangle:");
+print_shape_info(&rectangle);
+
+println!("Circle:");
+print_shape_info(&circle);
+
+
+///
+
+TRAIT BOND
+
+trait Greeting {
+    fn greet(&self) -> String {
+        "Hello from Rust!".to_string()
+    }
+}
+
+Use when defining generic functions or generic types where the trait bound is directly associated with the generic parameter.
+Can be used with associated types in traits.
+fn print_greeting1<T:Greeting >(input: &T) {// Fix using trait bound
+    println!("{}", input.greet());
+}
+
+Use when defining a function where the trait bound is for a parameter and you don't need to name the type implementing the trait.
+Cannot be used with associated types in traits.
+fn print_greeting2(input: &impl Greeting) {// Fix using impl trait syntax 
+    println!("{}", input.greet());
+}
+
+Use when the trait bounds become too complex to be specified directly in the function or type signature.
+Allows for separating the constraints from the function or type signature, making it easier to read and maintain
+fn print_greeting3<T>(input: &T) 
+// Fix by using the where clause
+where 
+T : Greeting
+{
+    println!("{}", input.greet());
+}
+
+
+struct Greeter;
+
+impl Greeting for Greeter {}
+
+let greeter_instance = Greeter;
+
+print_greeting1(&greeter_instance);
+print_greeting2(&greeter_instance);
+print_greeting3(&greeter_instance);
+
+
+///
+
+SUPER TRAIT
+
+trait Size {
+    fn compute_size(&self) -> u16;
+}
+
+trait Printable {
+    fn size_to_str(&self) -> String;
+}
+
+trait Comparable:Size+Printable {
+    fn print_greater(a: &Self, b: &Self) { 
+    // Please note that Self on the line above means, that type which will be implementing the trait 
+
+        let item1 = a.compute_size();
+        let item2 = b.compute_size();
+        if item1 > item2 {
+            println!("{} is greater than {}", a.size_to_str(), b.size_to_str());
+        } else if item2 > item1 {
+            println!("{} is greater than {}", b.size_to_str(), a.size_to_str());
+        } else {
+            println!("Both sizes are {}", a.size_to_str());
+        }
+    }
+}
+
+struct Book {
+    page: u16,
+}
+
+impl Size for Book {
+    fn compute_size(&self) -> u16 {
+        self.page
+    }
+}
+
+impl Printable for Book {
+    fn size_to_str(&self) -> String {
+        format!("Book having {} pages", self.page)
+    }
+}
+
+impl Comparable for Book {}
+
+let book_1 = Book { page: 50 };
+let book_2 = Book { page: 450 };
+Comparable::print_greater(&book_1, &book_2);
+
+///
+
+TRAIT OBJECTS
+
+&dyn 
+
+trait Animal {
+    fn sound(&self);
+}
+
+struct Dog;
+impl Animal for Dog {
+    fn sound(&self) {
+        println!("Woof!");
+    }
+}
+
+struct Cat;
+impl Animal for Cat {
+    fn sound(&self) {
+        println!("Meow!");
+    }
+}
+
+fn make_sound(animal: &dyn Animal) {
+    animal.sound();
+}
+
+let dog = Dog;
+let cat = Cat;
+
+make_sound(&dog as &dyn Animal); // Explicit casting to a trait object
+make_sound(&cat as &dyn Animal); // Explicit casting to a trait object
+
+
+///
+
+ASSOCIATED TYPES IN TRAITS
+
+trait Container {
+    type Item;
+
+    fn get_item(&self) -> Self::Item;
+}
+
+// Implement `Container` trait for `StringContainer`
+struct StringContainer {
+    item: String,
+}
+
+impl Container for StringContainer {
+    type Item = String; // Specify the associated type
+
+    fn get_item(&self) -> Self::Item {
+        self.item.clone() // Return the associated type
+    }
+}
+
+// Implement `Container` trait for `i32Container`
+struct IntContainer {
+    item: i32,
+}
+
+impl Container for IntContainer {
+    type Item = i32; // Specify the associated type
+
+    fn get_item(&self) -> Self::Item {
+        self.item // Return the associated type
+    }
+}
+
+
+let string_container = StringContainer { item: String::from("Hello") };
+let int_container = IntContainer { item: 42 };
+
+// Call the method using trait object
+println!("String container item: {}", string_container.get_item());
+println!("Int container item: {}", int_container.get_item());
+
+///
+
+CLOSUERS
+
+let add_one = |x| x + 1;
+
+println!("Result: {}", add_one(5))
+
+///
+to function
+
+fn apply_function<F: Fn(i32) -> i32>(f: F, x: i32) -> i32 {
+    f(x)
+}
+
+let double = |x| x * 2;
+let result = apply_function(double, 5);
+
+println!("Result: {}", result); 
+
+
+//fn
+//Fn: Captures variables by immutable reference, allowing only read access.
+    //FnOnce: Consumes variables it captures, taking ownership of them, and can't be called more than once.
+    //FnMut: Captures variables by mutable reference, allowing both read and write access.
+
+    //fn
+    let data = vec![1, 2, 3];
+    let closure = |index| println!("{}", data[index]);
+    closure(1);
+
+    //fnone
+    let data = vec![1, 2, 3];
+    let closure = move |index| println!("{}", data[index]);
+    closure(1);
+    // closure(2); // This line would cause a compilation error because closure has consumed `data`
+
+    //fnmut
+    let mut data = vec![1, 2, 3];
+    let mut closure = |index| {
+        data[index] *= 2;
+        println!("{}", data[index]);
+    };
+    closure(1);
+    closure(2);
+
+///
+function pointer
+fn add(x: u32, y: u32) -> u32 {
+    x + y
+}
+
+fn square(x: u32) -> u32 {
+    x * x
+}
+
+fn sum_of_squares(num: u32, sq: fn(u32) -> u32, add: fn(u32, u32) -> u32) -> u32 { 
+    let mut result = 0;
+    for i in 1..=num {
+        result = add(result, sq(i));
+    }
+    result
+}
+
+let num = 4;
+let sum = sum_of_squares(num, square, add);
+println!("Sum of squares from 1 to {} = {}", num, sum);
+
+//
+combinator 
+
+let numbers = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+let mut result = 0;
+
+result = numbers.iter().filter(|&&num| num%2 != 0).map(|&num| num * num).sum();
+
+println!("Result without combinators: {}", result);
+///
+
+Lifetime
+//functions
+fn longest<'a>(s1: &'a str, s2: &'a str) -> &'a str {
+    if s1.len() > s2.len() {
+        s1
+    } else {
+        s2
+    }
+}
+
+//struct
+struct Important<'a> {
+    part: &'a str,
+}
+
+impl<'a> Important<'a> {
+    fn new(part: &'a str) -> Self {
+        Important { part }
+    }
+}
+
+//trait
+trait Printer {
+    fn print<'a>(&self, message: &'a str);
+}
+
+
+///
+LIFE TIME ELISION
+
+rules
+The rules of lifetime elision in Rust are:
+
+Each elided lifetime in a function's arguments becomes a distinct lifetime parameter.
+If there is exactly one input lifetime parameter, it is assigned to all output lifetime parameters.
+If there are multiple input lifetime parameters, but one of them is &self or &mut self, the lifetime of self is assigned to all output lifetime parameters.
+
+fn print(s: &str) {}
+fn print(s: &'a str)
+fn debug(v: usize, s: &str) {} 
+fn debug<'a>(v: usize ,s :&'a str)
+
+fn substr(s: &str, until: usize) -> &str {} 
+fn substr<'a>(s :&'a str) -> &'a str
+
+fn get_str() -> &str {}             
+
+fn frob(s: &str, t: &str) -> &str{}      
+
+fn get_mut(&mut self) -> &mut T; 	
+fn get_mut<'a> (&'a mut self) -> &'a mut T
+
+fn new(buf: &mut [u8]) -> BufWriter;      
+fn new<'a>(bef:&'a mut [u8]) -> Bufwriter<'a>
+
+Single Input Reference:
+
+fn example(s: &str) -> &str {}
+
+Multiple Input References with self:
+
+impl<'a> Example<'a> {
+    fn method(&self, other: &str) -> &str {}
+}
+
+Distinct References:
+
+fn example(s1: &str, s2: &str) -> &str {}
+
+No Input References:
+
+fn example() -> &str {}
+
+Output Lifetime Parameters (with explicit annotations):
+
+
+fn example<'a>() -> &'a str {}
+
+///
+BOX
+
+enum List {
+    Cons(i32, Box<List>),
+    Nil,
+}
+let list = Cons(1, 
+        Box::new(Cons(2, 
+            Box::new(Cons(3, 
+                Box::new(Nil))))));
+
